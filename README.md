@@ -141,3 +141,41 @@ It will still do nothing if executed from the command line:
 
     $ python myscript.py
     $
+
+## Python modules that can be executed from command line
+
+To fix our broken script, what we need is to add a condition at the end of the file that calls main() only if it's being executed as a script.
+
+How can we detect if our code has been called from the command line or imported from a module?
+
+When we import our code, python fills the module `.__name__` variable to the called module's name
+
+For example:
+
+    import numpy as np
+    print(np.__name__)
+
+Will print the string `numpy`, which is the name of the imported module.
+
+But when the module is not imported but rather called from the command line, Python will populate the ```__name__``` variable with the string ```"__main__"```.
+
+So we can bifurcate the code in our script and execute main() only when it's intended to be run as a script:
+
+    import time
+    DELAY = 10
+    def main():
+        while(True):
+            time.sleep(DELAY)
+            print("Hello from a script! It's been {} seconds since last time.".format(DELAY))
+
+    if __name__ == "__main__":
+        main()
+
+This time calling ./myscript.py from the command line will run forever as it's intended, but importing it as a module will not hang our computer in an infinite loop.
+
+With this modification, our script can be installed as a module with pip as before but can be also run from the command line.
+
+    $ python myscript.py
+    Hello from a script! It's been 10 seconds since last time.
+    Hello from a script! It's been 10 seconds since last time.
+    ...
