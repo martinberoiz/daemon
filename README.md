@@ -179,3 +179,40 @@ With this modification, our script can be installed as a module with pip as befo
     Hello from a script! It's been 10 seconds since last time.
     Hello from a script! It's been 10 seconds since last time.
     ...
+
+## Using pip to create an installable script
+
+Using setuptools gives us an extra feature, which is, that now pip can create a small script from our module and place it in our $PATH. If it's installed in a virtual environment, it will be installed in the `bin/` directory, it it's installed globally, it will be installed in `/usr/local/bin`.
+
+To create this script, we just have to modify our setup.py like this:
+
+    from setuptools import setup
+    setup(name='mymodule',
+          version='0.1',
+          description='My Awesome Python Module',
+          py_modules=['myscript', ],
+          entry_points={
+            'console_scripts': [
+                'mydaemon = myscript:main',
+            ],
+          },
+         )
+
+If we install this with pip:
+
+    $ pip install .
+
+it will create two things. 
+
+First, it will install myscript.py as a module (so it can be imported as `import myscript`), this is of not much use for this example.
+
+Secondly, it will create a `mydaemon` script, which basically calls `main` from `myscript`.
+
+    $ mydaemon
+    Hello from a script! It's been 10 seconds since last time.
+    Hello from a script! It's been 10 seconds since last time.
+    ...    
+
+This `mydaemon` is the one we will use as the systemd service.
+
+You can check that the previous functionality still works as expected.
