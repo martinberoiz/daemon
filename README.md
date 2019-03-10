@@ -216,3 +216,53 @@ Secondly, it will create a `mydaemon` script, which basically calls `main` from 
 This `mydaemon` is the one we will use as the systemd service.
 
 You can check that the previous functionality still works as expected.
+
+## Automating the installation of the systemd unit
+
+We could ask our user to edit and copy himself the file mydaemond.service, but instead we will create a makefile, which is more familiar to most Linux users, and make the installation process easier.
+
+    all: mydaemon mydaemond.service
+    .PHONY: all mydaemon install uninstall clean
+
+    service_dir=/etc/systemd/system
+    awk_script='BEGIN {FS="="; OFS="="}{if ($$1=="ExecStart") {$$2=exec_path} if (substr($$1,1,1) != "\#") {print $$0}}'
+
+    mydaemon: myscript.py setup.py
+        pip install .
+
+    mydaemond.service: myscript.py
+    # awk is needed to replace the absolute path of mydaemon executable in the .service file
+        awk -v exec_path=$(shell which mydaemon) $(awk_script) mydaemond.service.template > mydaemond.service
+
+    install: $(service_dir) $(conf_dir) schedulerd.service scheduler.conf.yml
+        cp mydaemond.service $(service_dir)
+
+    uninstall:
+        -systemctl stop mydaemond
+        -rm -r $(service_dir)/mydaemond.service
+
+    clean:
+        -rm mydaemond.service
+
+The makefile makes use of a .service template file, that we provide below.
+
+    # mydaemond.service.template
+    [Unit]
+    Description=My Awesome Service
+    After=network.target
+    
+    [Service]
+    Type=simple
+    ExecStart=/home/myuser/myscript.py
+    Restart=on-failure
+
+Now to install the service, we just need to `make` and `make install`.
+
+    $ make
+    $ sudo make install
+
+The installation requires root permissions because it will copy files over ```/etc/``` which is usually owned by `root`.
+
+The makefile will basically replace the full path of the `mydaemon` executable into the `ExecStart` line using `awk` and then copy the file over to  ```/etc/```.
+
+Makefile commands `clean` and `uninstall` are also provided for convenience.

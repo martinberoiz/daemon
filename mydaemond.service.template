@@ -1,0 +1,9 @@
+# mydaemond.service.template
+[Unit]
+Description=My Awesome Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/myuser/myscript.py
+Restart=on-failure
